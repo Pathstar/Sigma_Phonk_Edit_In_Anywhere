@@ -1,8 +1,11 @@
 import time
+
 start_time_dict = {}
 used_time_dict = {}
 
 ori_print = print
+
+
 def print_use_time(time_name, log_prefix=None):
     use_time = time.time() - start_time_dict.get(time_name, 0)
     if log_prefix is None:
@@ -32,13 +35,18 @@ import soundfile as sf
 import sounddevice as sd
 import numpy as np
 import queue as pyqueue
+
 tk_queue = pyqueue.Queue()
+
 
 class DummyText:
     def insert(self, *args, **kwargs):
         pass
+
     def see(self, *args, **kwargs):
         pass
+
+
 # 初始化
 tk_log_text_area = DummyText()
 is_quit = False
@@ -56,8 +64,6 @@ MOUSE_PREFIX = "[Mouse]"
 SCREEN_PREFIX = "[Screen]"
 SOUND_PREFIX = "[Sound]"
 TEXTURE_PREFIX = "[Texture]"
-
-
 
 
 # ---------------- tool ----------------
@@ -178,11 +184,7 @@ else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-
 def log_info(*args, **kwargs):
-    if is_quit:
-        ori_print("\nmain quit")
-        os._exit(0)
     ori_print(*args, **kwargs)
     msg = " ".join(map(str, args))
     tk_log_text_area.insert(tk.END, msg + "\n")
@@ -190,10 +192,10 @@ def log_info(*args, **kwargs):
     return log_info
 
 
-
-
 if config.is_debug and config.is_open_main_window:
     print_xd = log_info
+
+
     def print(*args, **kwargs):
         log_info(*args, **kwargs)
         return print
@@ -419,7 +421,6 @@ class MouseTrigger:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-
     def match(self, x, y, pressed):
         if not self.enable:
             return False
@@ -460,6 +461,7 @@ class MouseTrigger:
             print(f"config error {e}")
             pass
 
+
 mouse_trigger_dict = {
     button_name_dict.get(btn, btn): MouseTrigger(**setting)
     for btn, setting in config.mouse_triggers.items()
@@ -480,7 +482,7 @@ class SigmaWork:
 
     def sigma_work_init(self):
         tk_ready = threading.Event()
-        tk_thread = threading.Thread(target=self.start_tk_thread, args=(tk_ready, ), daemon=True)
+        tk_thread = threading.Thread(target=self.start_tk_thread, args=(tk_ready,), daemon=True)
         tk_thread.start()
         tk_ready.wait()
 
@@ -530,6 +532,7 @@ class SigmaWork:
             tk_log_text_area.pack()
         else:
             root.withdraw()
+
         def process_queue():
             try:
                 while True:
@@ -545,6 +548,16 @@ class SigmaWork:
         background_ready_event.set()
         process_queue()
         root.mainloop()
+
+        class QuitText(DummyText):
+            def insert(self, *args, **kwargs):
+                ori_print("main_quit")
+                os._exit(0)
+
+            def see(self, *args, **kwargs):
+                self.insert()
+
+        tk_log_text_area = QuitText()
         global is_quit
         is_quit = True
         if config.is_debug:
@@ -616,15 +629,9 @@ class SigmaWork:
             label = tk.Label(win, image=edit_bg)
             label.image = edit_bg
             label.pack(fill='both', expand=True)
-            # print("wait")
-            # time.sleep(1)
-            # win.destroy()
-            # print("destroy")
-            # return
             self.ps.play_random_sound(duration, config.volume)
             win.after(int(duration * 1000), win.destroy)
-            # time.sleep(duration)
-            # print("destroy")
+
 
         tk_queue.put((do_show, (), {}))
 
@@ -642,22 +649,8 @@ class SigmaWork:
             return img
 
     def overlay_image(self, bg_img, texture_img, center_x, center_y, resize_to_bg=False):
-        """
-        在bg_img上，将texture_img的中心贴到(center_x, center_y)。
-        bg_img, texture_img均为PIL.Image对象
-        resize_to_bg: 若贴图比背景还大，可自动缩小
-        返回合成后的新Image
-        """
         # bg_w, bg_h = bg_img.size
         tex = texture_img.convert('RGBA')
-
-        # if resize_to_bg:
-        #     # 按需缩放大贴图
-        #     max_w, max_h = bg_w, bg_h
-        #     tw, th = tex.size
-        #     scale = min(1.0, min(max_w / tw, max_h / th))
-        #     if scale < 1.0:
-        #         tex = tex.resize((int(tw*scale), int(th*scale)), Image.ANTIALIAS)
 
         tw, th = tex.size
         paste_x = int(center_x - tw / 2)
@@ -742,7 +735,8 @@ class SigmaWork:
                                 time.sleep(windows_wait_time)
                             self.entry_sigma()
             except Exception as e:
-                print(f"{SCREEN_PREFIX} window_focus_listener Failed, hwnd={hwnd}, last_hwnd={last_hwnd}\n{SCREEN_PREFIX} {e}")
+                print(
+                    f"{SCREEN_PREFIX} window_focus_listener Failed, hwnd={hwnd}, last_hwnd={last_hwnd}\n{SCREEN_PREFIX} {e}")
 
             time.sleep(windows_detect_interval)
 
@@ -776,21 +770,4 @@ if __name__ == '__main__':
     print_use_time("SW_Init")
     time.sleep(2)
     sw.start_sigma_work()
-    # try:
-    #
-    #     # record_start_time("SW_Start")
-    #
-    #     # print_use_time("SW_Start")
-    # except Exception as main_error:
-    #     print(main_error)
-
-    # sw.trigger_sigma()
-    # time.sleep(3)
-    # ps = Playsound()
-    # ps.change_speed()
-    # ps.play_random_sound(duration=4.5)
-
-    # ps.play_random_sound(duration=5 ,speed=3)
-
-    # time.sleep(4)
 
