@@ -6,10 +6,12 @@
   "min_playtime": 2,
   "max_playtime": 4,
   "min_speed": 0.7,
-  "max_speed": 1.5,
+  "max_speed": 1.3,
   "texture_scale": 1,
   "texture_x": 0.5,
   "texture_y": 0.8,
+  "is_auto_texture_scale": true,
+  "texture_size": 500,
   "mouse_triggers_enable": true,
   "mouse_triggers": {
     "left": {
@@ -18,7 +20,7 @@
       "release": true,
       "area": "all",
       "wait": 0.5,
-      "chance": 0.1
+      "chance": 0.2
     },
     "right":{
       "enable": true,
@@ -26,7 +28,7 @@
       "release": true,
       "area": "all",
       "wait": 0.5,
-      "chance": 0.1
+      "chance": 0.2
     }
   },
   "windows_switch_triggers_enable": true,
@@ -44,7 +46,8 @@
     "chance": "default"
   },
   "background_trigger_rate": 0,
+  "title": "Sigma Phonk Edit",
+  "subtitle": "In Anywhere",
   "dont_do_that": false,
   "is_debug": false
-
 }
