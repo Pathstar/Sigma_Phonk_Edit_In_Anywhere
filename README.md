@@ -4,7 +4,7 @@ Pony Version 为材质替换小马颜艺版
 
 仅可在Windows上运行
 
-bilibili视频: 
+bilibili视频: [BV1ckUABwENY](https://www.bilibili.com/video/BV1ckUABwENY)
 
 
 
@@ -71,3 +71,4 @@ bilibili视频:
 | chance                  | 触发概率                | `"default" / 0-1`    | default         |
 
 ### 
+
