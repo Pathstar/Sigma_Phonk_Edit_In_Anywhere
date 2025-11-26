@@ -51,12 +51,12 @@ class DummyText:
 tk_log_text_area = DummyText()
 is_quit = False
 #  pip install pillow pynput mss soundfile sounddevice numpy pywin32
-# pyinstaller --onefile --add-data "config.json;." --add-data "resources;resources" sigma_phonk_edit_but_at_work.py
-# pyinstaller --onefile --icon=HaHaBundle.ico sigma_phonk_edit_but_at_work.py
-# pyinstaller --onefile --windowed --icon=HaHaBundle.ico sigma_phonk_edit_but_at_work.py
+# pyinstaller --onefile --add-data "config.json;." --add-data "resources;resources" sigma_phonk_edit.py
+# pyinstaller --onefile --icon=HaHaBundle.ico sigma_phonk_edit.py
+# pyinstaller --onefile --windowed --icon=HaHaBundle.ico sigma_phonk_edit.py
 
 # or
-# pyinstaller -F -w --icon=HaHaBundle.ico sigma_phonk_edit_but_at_work.py
+# pyinstaller -F -w --icon=XD.ico sigma_phonk_edit.py
 
 # const attr
 SW_PREFIX = "[Main]"
@@ -104,6 +104,10 @@ def nothing(*args, **kwargs):
 
 class Config:
     def __init__(self):
+        self.subtitle = "In Anywhere"
+        self.title = "Sigma Phonk Edit"
+        self.texture_size = 500
+        self.is_auto_texture_scale = True
         self.is_open_main_window = True
         self.mouse_triggers_enable = True
         self.windows_switch_triggers_enable = True
@@ -508,19 +512,21 @@ class SigmaWork:
         if config.is_open_main_window:
             root.geometry("400x300")
             root.title("Sigma Phonk Edit")
-            ico_path = "resources\\HaHaBundle.ico"
+            ico_path = "resources\\XD.ico"
             if os.path.exists(ico_path):
                 root.iconbitmap(ico_path)
 
             root.configure(bg="white")
-            title = tk.Label(root, text="Sigma Phonk Edit", fg="black", bg="white", font=("微软雅黑", 24))
+            title = tk.Label(root, text=config.title, fg="black", bg="white", font=("微软雅黑", 24))
             title.pack(pady=(10, 0))
-            subtitle = tk.Label(root, text="But At Work", fg="gray", bg="white", font=("微软雅黑", 14))
+            subtitle = tk.Label(root, text=config.subtitle, fg="gray", bg="white", font=("微软雅黑", 14))
             subtitle.pack(pady=(5, 10))
-            image_path = "resources\\textures\\gui\\caveira9.png"
+            image_path = "resources\\image.png"
             if os.path.exists(image_path):
                 image = Image.open(image_path)
-                photo = ImageTk.PhotoImage(scale_image(image, 0.1))
+                image_width, image_height = image.size
+                image_scale = 200 / (image_width + image_height)
+                photo = ImageTk.PhotoImage(scale_image(image, image_scale))
                 # 放在 Label 里显示图片
                 label = tk.Label(root, image=photo, bg="white")
                 label.pack(padx=20, pady=20)
@@ -584,11 +590,14 @@ class SigmaWork:
             # print(f"monitor {l}, {t}, {r}, {b} screen_width {screen_width} height {screen_height}")
             texture_path = self.get_random_texture_image()
             if texture_path:
+                basename = os.path.basename(texture_path)
                 texture = Image.open(texture_path)
+
                 # 缩放处理
                 # 获取比较信息
                 texture_width, texture_height = texture.size
-                # 取短边计算
+
+                # 取显示器短边计算显示器缩放
                 if screen_width > screen_height:
                     screen_dim = screen_height
                     texture_dim = texture_height
@@ -599,14 +608,20 @@ class SigmaWork:
                     k1_dim = 1920
                 # 显示器缩放
                 texture_scale = screen_dim / k1_dim
-
+                if config.is_auto_texture_scale:
+                    # 自动缩放
+                    # 原始尺寸总和
+                    original_total_size = texture_width + texture_height
+                    # 缩放比例，使得缩放后宽高之和接近目标值
+                    texture_scale *= config.texture_size / original_total_size
+                else:
+                    # 配置缩放
+                    if basename in self.scales:
+                        scale = self.scales[basename]
+                        if isinstance(scale, (int, float)):
+                            texture_scale *= scale
                 # 自定义缩放
                 texture_scale *= config.texture_scale
-                basename = os.path.basename(texture_path)
-                if basename in self.scales:
-                    scale = self.scales[basename]
-                    if isinstance(scale, (int, float)):
-                        texture_scale *= scale
 
                 print_xd(f"{TEXTURE_PREFIX} texture_scale {texture_scale}")
                 if texture_scale != 1.0:
@@ -629,9 +644,15 @@ class SigmaWork:
             label = tk.Label(win, image=edit_bg)
             label.image = edit_bg
             label.pack(fill='both', expand=True)
+            # print("wait")
+            # time.sleep(1)
+            # win.destroy()
+            # print("destroy")
+            # return
             self.ps.play_random_sound(duration, config.volume)
             win.after(int(duration * 1000), win.destroy)
-
+            # time.sleep(duration)
+            # print("destroy")
 
         tk_queue.put((do_show, (), {}))
 
@@ -649,8 +670,22 @@ class SigmaWork:
             return img
 
     def overlay_image(self, bg_img, texture_img, center_x, center_y, resize_to_bg=False):
+        """
+        在bg_img上，将texture_img的中心贴到(center_x, center_y)。
+        bg_img, texture_img均为PIL.Image对象
+        resize_to_bg: 若贴图比背景还大，可自动缩小
+        返回合成后的新Image
+        """
         # bg_w, bg_h = bg_img.size
         tex = texture_img.convert('RGBA')
+
+        # if resize_to_bg:
+        #     # 按需缩放大贴图
+        #     max_w, max_h = bg_w, bg_h
+        #     tw, th = tex.size
+        #     scale = min(1.0, min(max_w / tw, max_h / th))
+        #     if scale < 1.0:
+        #         tex = tex.resize((int(tw*scale), int(th*scale)), Image.ANTIALIAS)
 
         tw, th = tex.size
         paste_x = int(center_x - tw / 2)
@@ -770,4 +805,20 @@ if __name__ == '__main__':
     print_use_time("SW_Init")
     time.sleep(2)
     sw.start_sigma_work()
+    # try:
+    #
+    #     # record_start_time("SW_Start")
+    #
+    #     # print_use_time("SW_Start")
+    # except Exception as main_error:
+    #     print(main_error)
 
+    # sw.trigger_sigma()
+    # time.sleep(3)
+    # ps = Playsound()
+    # ps.change_speed()
+    # ps.play_random_sound(duration=4.5)
+
+    # ps.play_random_sound(duration=5 ,speed=3)
+
+    # time.sleep(4)
